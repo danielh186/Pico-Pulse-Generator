@@ -11,12 +11,23 @@ wait_trigger:
 delay_loop:
     jmp x-- delay_loop   side 1       ; loop for high time
 
+; Wait till jitter from glitch is over to prevent accidental retriggering
+cooldown_loop:
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+    nop [10]               side 0
+
 wait_low:
     nop [5]               side 0       ; Ensure LOW pulse on output
     wait 0 pin 0          side 0       ; Wait for trigger to go LOW (falling edge)
-
-debounce:
-    nop [10]              side 0       ; Simple debounce (approx 11 cycles)
 
 arm_trigger:
     mov x, y              side 0       ; Restore original delay
