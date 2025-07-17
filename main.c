@@ -55,6 +55,7 @@ int main() {
     pio_sm_config c = trigger_sweeper_program_get_default_config(pio_programm_offset);
     sm_config_set_in_pins(&c, TRIGGER_PIN);
     sm_config_set_sideset_pins(&c, OUTPUT_PIN);
+    gpio_set_drive_strength(OUTPUT_PIN, GPIO_DRIVE_STRENGTH_12MA);
     sm_config_set_clkdiv(&c, 1.0f);  // Full speed: 125MHz (8ns per instr)
 
     // Initialize and enable state machine
