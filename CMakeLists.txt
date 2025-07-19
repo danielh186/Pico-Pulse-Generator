@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.13)
 # note: this must happen before project()
 include(pico_sdk_import.cmake)
 
-project(triggerSweeper)
+project(picoPulsegen)
 
 # set(PICO_USE_FASTEST_SUPPORTED_CLOCK 1) # 200 MHz
 add_compile_definitions(SYS_CLK_MHZ=200)
@@ -13,20 +13,20 @@ add_compile_definitions(SYS_CLK_MHZ=200)
 pico_sdk_init()
 
 # rest of your project
-add_executable(triggerSweeper
+add_executable(picoPulsegen
     main.c
     pulsegen.pio
     trigger_test.pio
 )
 
-pico_generate_pio_header(triggerSweeper ${CMAKE_CURRENT_LIST_DIR}/pulsegen.pio)
-pico_generate_pio_header(triggerSweeper ${CMAKE_CURRENT_LIST_DIR}/trigger_test.pio)
+pico_generate_pio_header(picoPulsegen ${CMAKE_CURRENT_LIST_DIR}/pulsegen.pio)
+pico_generate_pio_header(picoPulsegen ${CMAKE_CURRENT_LIST_DIR}/trigger_test.pio)
 
-pico_enable_stdio_usb(triggerSweeper 1)
-pico_enable_stdio_uart(triggerSweeper 0)
+pico_enable_stdio_usb(picoPulsegen 1)
+pico_enable_stdio_uart(picoPulsegen 0)
 
 # Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(triggerSweeper pico_stdlib hardware_pio hardware_dma)
+target_link_libraries(picoPulsegen pico_stdlib hardware_pio hardware_dma)
 
 # create map/bin/hex/uf2 file in addition to ELF.
-pico_add_extra_outputs(triggerSweeper)
+pico_add_extra_outputs(picoPulsegen)
