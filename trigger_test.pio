@@ -1,0 +1,20 @@
+.program trigger_test
+
+pull        ; pull high delay count (in cycles)
+mov isr, osr
+pull        ; pull low delay count (in cycles)
+
+.wrap_target
+    mov x, isr        ; reload high_delay count (from backup in isr)
+    mov y, osr        ; reload low_delay count (from osr)
+
+    set pins, 1       ; set pin HGH
+
+    high_delay:
+        jmp x-- high_delay
+
+    set pins, 0       ; set pin LOW
+
+    low_delay:
+        jmp y-- low_delay
+.wrap

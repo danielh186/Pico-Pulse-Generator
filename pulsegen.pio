@@ -1,0 +1,62 @@
+.program pulsegen
+.side_set 1
+
+backup_combined:
+pull                side 0              ; Pull combined parameters (spacing, length, repeats)
+mov isr, osr        side 0              ; Backup combined in PINS register
+
+.wrap_target
+    recover_parameters:
+    pull                side 0              ; Pull offset
+    mov x, osr          side 0              ; Move offset to x
+    mov osr, isr        side 0              ; Restore combined
+
+    wait_trigger:
+        wait 1 gpio 0   side 0             ; Wait for rising edge on GPIO 0
+
+    offset_loop:
+        jmp x-- offset_loop   side 0        ; Loop for trigger_offset cycles
+
+    out x, 5            side 0              ; Load repeats into x (5 bits)
+
+    repeat:
+    out y, 7            side 0              ; Load pulse_length into y (6 bits)
+    length_loop:
+        jmp y-- length_loop   side 1        ; Loop for pulse_length
+
+    ; Beginning of spacing
+    out y, 20           side 0              ; Load spacing into y (21 bits)
+
+    spacing_loop:
+        ; TODO: allow optional setting of multiplier (0-15) -> modify assembly code from c program
+        jmp y-- spacing_loop [0]   side 0       ; Loop for pulse_spacing
+
+
+    mov osr, isr        side 0              ; Backup offset in PINS register
+    out null, 5         side 0              ; Skip repeats from OSR (load into null)
+
+    jmp x-- repeat      side 0              ; Loop for pulse_repetitions
+
+    ; Wait till jitter from glitch is over to prevent accidental retriggering
+    ; TODO: make customizable
+    cooldown_loop:
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+        nop [15]               side 0
+
+    wait_low:
+        nop [15]               side 0       ; Ensure LOW pulse on output
+        wait 0 gpio 0          side 0       ; Wait for trigger to go LOW (falling edge)
+.wrap
