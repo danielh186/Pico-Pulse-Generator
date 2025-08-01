@@ -18,13 +18,41 @@ class DelayController:
         self.ser.close()
 
 
-    valid_param_keys = {"offset", "length", "spacing", "repeats"}
+    # Since pico expects paramets in clock cylces and one clock cycle = 5ns
+    # Divide incoming ns values by 5
+    param_constraints = {
+        "offset":  {"range": (2 * 5, (2**32 - 1) * 5), "divider": 5},
+        "length":  {"range": (1 * 5, (2**7 - 1) * 5),  "divider": 5},
+        "spacing": {"range": (6 * 6, (2**20 - 1) * 5),  "divider": 5},
+        "repeats": {"range": (0, 31),   "divider": 1},
+    }
 
     def set_parameters(self, parameters: dict):
         uart_string = "S "
         for key, value in parameters.items():
-            if key in self.valid_param_keys:
-                uart_string += f"{key[0]} {value} "
+            # Verify parameter name
+            if key not in self.param_constraints:
+                raise ValueError(f"Invalid parameter: '{key}'")
+
+            # Get parameter constraints
+            constraint = self.param_constraints[key]
+            value_range = constraint["range"]
+            divider = constraint["divider"]
+
+            # Verify parameter type (int)
+            if not isinstance(value, int):
+                raise ValueError(f"Value for '{key}' must be an integer.")
+
+            # Verify parameter range
+            if value_range:
+                min_val, max_val = value_range
+                if not (min_val <= value <= max_val):
+                    raise ValueError(f"Value for '{key}'={value} is out of valid range {value_range}.")
+            if divider and value % divider != 0:
+                raise ValueError(f"Value for '{key}'={value} must be divisible by {divider}.")
+
+            divided_value = value // divider # Calculate clock cycles from ns inputs
+            uart_string += f"{key[0]} {divided_value} "
 
         self.ser.write(uart_string.encode('ascii'))
         response = self.ser.readline().decode().strip()
@@ -32,20 +60,26 @@ class DelayController:
         if response != "OK":
             raise RuntimeError(f"Setting Pico parameters: '{response}' on command: '{uart_string}'")
 
-
     def get_parameter(self, key):
-        if key in self.valid_param_keys:
-            uart_string = f"G {key[0]}"
-            self.ser.write(uart_string.encode('ascii'))
-            response = self.ser.readline().decode().strip()
-            try:
-                return int(response)
-            except ValueError:
-                print(f"Error: Unexpected response '{response}'")
-                return -1
-        else:
+        # Veriy parameter name
+        if key not in self.param_constraints:
+            raise ValueError(f"Invalid parameter: '{key}'")
+
+        # Get parameter constraints
+        divider = self.param_constraints[key]["divider"]
+        uart_string = f"G {key[0]}"
+        self.ser.write(uart_string.encode('ascii'))
+        response = self.ser.readline().decode().strip()
+
+        # Convert parameter value to number
+        try:
+            raw = int(response)
+        except ValueError:
+            print(f"Error: Unexpected response '{response}' for parameter '{key}'")
             return -1
 
+        # Return paramter in ns (multiply by 5)
+        return raw * divider
 
 def main():
     parser = argparse.ArgumentParser(description='Control delay parameters on a Raspberry Pi Pico')
