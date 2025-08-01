@@ -12,7 +12,7 @@ The PIO blocks of the pico are used to achieve consistent timing. The output tri
   - max = 127 cycles (635 ns)
 - spacing:
   - min = 6 cycles (30 ns)
-  - max = 1048576 cycles (5.24 ms)
+  - max = 1048575 cycles (5.24 ms)
 - repeats:
   - min = 0
   - max = 31
